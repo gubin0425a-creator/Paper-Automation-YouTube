@@ -339,6 +339,12 @@
                 <input type="text" id="openaiKey" placeholder="본인의 OpenAI API Key (sk-...) 를 입력하세요">
             </div>
 
+            <div class="form-group" style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <label style="color: #DC2626;">🔑 GitHub 시스템 토큰 (클라우드 엔진 가동용)</label>
+                <input type="password" id="githubToken" placeholder="ghp_ 로 시작하는 깃허브 토큰을 입력하세요" style="border-color: rgba(239, 68, 68, 0.3);">
+                <p style="font-size: 0.75rem; color: #DC2626; margin: 5px 0 0 0;">이 토큰은 서버에 저장되지 않고 대표님의 기기에만 안전하게 보관됩니다.</p>
+            </div>
+
             <button id="startBtn" class="btn-start" onclick="startAutomation()">🚀 AI 자동화 40개 생성 시작</button>
             
             <div id="logBox" class="log-box">
@@ -424,7 +430,9 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://atlanta-attract-cruises-disc.trycloudflare.com/start";
+        const REPO_OWNER = "gubin0425a-creator";
+        const REPO_NAME = "Paper-Automation-YouTube";
+        const WORKFLOW_ID = "generate.yml"; // .github/workflows/generate.yml
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
@@ -507,7 +515,17 @@
             if(localStorage.getItem('savedStrategy')) document.getElementById('strategy').value = localStorage.getItem('savedStrategy');
             if(localStorage.getItem('savedYoutubeKey')) document.getElementById('youtubeKey').value = localStorage.getItem('savedYoutubeKey');
             if(localStorage.getItem('savedOpenaiKey')) document.getElementById('openaiKey').value = localStorage.getItem('savedOpenaiKey');
+            if(localStorage.getItem('savedGithubToken')) document.getElementById('githubToken').value = localStorage.getItem('savedGithubToken');
         };
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
 
         async function startAutomation() {
             const btn = document.getElementById('startBtn');
@@ -516,47 +534,91 @@
             const fileInput = document.getElementById('referenceImage');
             const youtubeKey = document.getElementById('youtubeKey').value;
             const openaiKey = document.getElementById('openaiKey').value;
+            const githubToken = document.getElementById('githubToken').value;
             
+            if (!githubToken) {
+                alert("GitHub 시스템 토큰을 입력해야 클라우드 엔진을 가동할 수 있습니다!");
+                return;
+            }
+
             localStorage.setItem('savedVideoType', videoType);
             localStorage.setItem('savedStrategy', strategy);
             localStorage.setItem('savedYoutubeKey', youtubeKey);
             localStorage.setItem('savedOpenaiKey', openaiKey);
+            localStorage.setItem('savedGithubToken', githubToken);
             
             btn.disabled = true;
-            btn.innerText = "⏳ 작업 준비 중...";
+            btn.innerText = "☁️ 클라우드 엔진 예열 중...";
             
-            addLog("작업 지시 데이터를 구성 중입니다...");
-            
-            const formData = new FormData();
-            formData.append("type", videoType);
-            formData.append("strategy", strategy);
-            formData.append("youtubeKey", youtubeKey);
-            formData.append("openaiKey", openaiKey);
-            if(fileInput.files[0]) {
-                formData.append("image", fileInput.files[0]);
-                addLog("레퍼런스 이미지 탑재 완료.");
-            }
-
-            addLog("클라우드 백엔드로 작업 지시 전송 중...");
-
             try {
-                const response = await fetch(BACKEND_URL, { 
+                // 1. 이미지가 있다면 GitHub Repo에 먼저 파일 업로드
+                if (fileInput.files[0]) {
+                    addLog("이미지 에셋을 클라우드에 업로드 중...");
+                    const base64Img = await getBase64(fileInput.files[0]);
+                    const putUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/uploaded_image.png`;
+                    
+                    // SHA 확인 (덮어쓰기 위해)
+                    let sha = null;
+                    const getRes = await fetch(putUrl, { headers: { 'Authorization': `token ${githubToken}` } });
+                    if (getRes.ok) {
+                        const getJson = await getRes.json();
+                        sha = getJson.sha;
+                    }
+                    
+                    const putData = {
+                        message: "Upload reference image via UI",
+                        content: base64Img,
+                        branch: "main"
+                    };
+                    if (sha) putData.sha = sha;
+
+                    await fetch(putUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${githubToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(putData)
+                    });
+                    addLog("이미지 업로드 완료!");
+                }
+
+                addLog("GitHub Actions 무인 공장 가동 명령 전송...");
+
+                // 2. GitHub Actions Workflow Trigger
+                const dispatchUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`;
+                
+                const response = await fetch(dispatchUrl, { 
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            videoType: videoType,
+                            strategy: strategy,
+                            youtubeKey: youtubeKey,
+                            openaiKey: openaiKey
+                        }
+                    })
                 });
                 
-                if(response.ok) {
-                    addLog("✅ 서버 승인 완료!");
-                    addLog("--- 자동화 프로세스 시작 ---");
-                    addLog("[1/40] 첫 번째 영상 스크립트 작성 중...");
-                    btn.innerText = "⚙️ 작업 릴레이 진행 중";
+                if(response.ok || response.status === 204) {
+                    addLog("✅ 클라우드 무인 공장 가동 시작!");
+                    addLog("--- 자동화 프로세스 ---");
+                    addLog("이제 이 화면을 끄고 주무셔도 클라우드에서 40개 영상이 자동으로 렌더링 및 업로드됩니다.");
+                    btn.innerText = "⚙️ 클라우드 릴레이 진행 중";
                 } else {
-                    addLog("❌ 서버 에러 발생 (백엔드를 확인하세요)");
+                    const errText = await response.text();
+                    addLog(`❌ GitHub API 에러: ${response.status} - ${errText}`);
                     btn.disabled = false;
                     btn.innerText = "🚀 AI 자동화 40개 생성 시작";
                 }
             } catch (error) {
-                addLog("❌ 서버 연결 실패. (PC의 파이썬 백엔드가 켜져있는지 확인)");
+                addLog(`❌ 치명적 오류 발생: ${error.message}`);
                 btn.disabled = false;
                 btn.innerText = "🚀 AI 자동화 40개 생성 시작";
             }
