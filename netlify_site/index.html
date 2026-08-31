@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AutoTube - 스마트 유튜브 자동화</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f0f4f8">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text-main: #1F2937;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: var(--surface);
+            padding: 30px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 500px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header img {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0 0 5px 0;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 0;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background-color: #F9FAFB;
+            transition: border-color 0.2s;
+        }
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #FFF;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* 커스텀 파일 업로드 */
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-upload-btn {
+            border: 1px dashed var(--primary);
+            color: var(--primary);
+            background-color: #EEF2FF;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            display: block;
+        }
+
+        .btn-start { 
+            background-color: var(--primary); 
+            color: white; 
+            padding: 16px; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            border: none; 
+            border-radius: 14px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            width: 100%; 
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+        .btn-start:disabled {
+            background-color: #9CA3AF;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .log-box {
+            margin-top: 25px;
+            background-color: #111827;
+            color: #10B981;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            height: 120px;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            display: none;
+        }
+        .log-box div { margin-bottom: 5px; }
+        
+        .safari-tooltip { display: none; background: #FEF3C7; color: #92400E; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; border: 1px solid #F59E0B;}
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <!-- 사파리 전용 안내창 -->
+        <div id="safariTooltip" class="safari-tooltip">
+            🍏 <b>앱으로 설치하기:</b> 하단의 <b>[공유 ⍐]</b> 버튼 ➔ <b>[홈 화면에 추가 ⊕]</b>
+        </div>
+
+        <div class="header">
+            <img src="icon-192.png" alt="로고">
+            <h1>AutoTube AI</h1>
+            <p>원페이지 쇼츠 무인 자동화 시스템</p>
+        </div>
+        
+        <div class="form-group">
+            <label>🎬 영상 생성 옵션</label>
+            <select id="videoType">
+                <option value="shorts">세로형 쇼츠 (9:16)</option>
+                <option value="long">가로형 일반 영상 (16:9)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>🖼️ 레퍼런스 이미지 첨부 (원페이지)</label>
+            <div class="file-upload-wrapper">
+                <span class="file-upload-btn" id="fileLabel">📸 이미지 선택하기...</span>
+                <input type="file" id="referenceImage" accept="image/*" onchange="updateFileLabel()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>📝 채널 전략 및 프롬프트</label>
+            <textarea id="strategy" placeholder="예: 20대 타겟, 빠른 템포, 웅장한 BGM 사용. 대본은 동기부여 위주로 작성할 것."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>🔑 유튜브 업로드 권한 (API 키 / URL)</label>
+            <input type="text" id="youtubeKey" placeholder="본인의 유튜브 권한 키 또는 URL을 입력하세요" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; box-sizing: border-box; background-color: #F9FAFB;">
+        </div>
+
+        <button id="startBtn" class="btn-start" onclick="startAutomation()">🚀 AI 자동화 40개 생성 시작</button>
+        
+        <div id="logBox" class="log-box">
+            <div>[System] 대기 중...</div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "https://atlanta-attract-cruises-disc.trycloudflare.com/start";
+
+        // 서비스 워커 등록 (PWA 갱신)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        // 아이폰 사파리 앱 설치 안내
+        const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+        if (isIos() && !isStandalone()) {
+            document.getElementById('safariTooltip').style.display = 'block';
+        }
+
+        function updateFileLabel() {
+            const input = document.getElementById('referenceImage');
+            const label = document.getElementById('fileLabel');
+            if(input.files && input.files[0]) {
+                label.innerText = "✅ " + input.files[0].name;
+                label.style.backgroundColor = "#D1FAE5";
+                label.style.borderColor = "#10B981";
+                label.style.color = "#047857";
+            }
+        }
+
+        function addLog(msg) {
+            const logBox = document.getElementById('logBox');
+            logBox.style.display = 'block';
+            const div = document.createElement('div');
+            div.innerText = `> ${msg}`;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // 화면이 켜질 때 저장된 세팅 불러오기
+        window.onload = () => {
+            if(localStorage.getItem('savedVideoType')) {
+                document.getElementById('videoType').value = localStorage.getItem('savedVideoType');
+            }
+            if(localStorage.getItem('savedStrategy')) {
+                document.getElementById('strategy').value = localStorage.getItem('savedStrategy');
+            }
+            if(localStorage.getItem('savedYoutubeKey')) {
+                document.getElementById('youtubeKey').value = localStorage.getItem('savedYoutubeKey');
+            }
+        };
+
+        async function startAutomation() {
+            const btn = document.getElementById('startBtn');
+            const videoType = document.getElementById('videoType').value;
+            const strategy = document.getElementById('strategy').value;
+            const fileInput = document.getElementById('referenceImage');
+            const youtubeKey = document.getElementById('youtubeKey').value;
+            
+            // 입력한 세팅 내용 스마트폰에 영구 저장
+            localStorage.setItem('savedVideoType', videoType);
+            localStorage.setItem('savedStrategy', strategy);
+            localStorage.setItem('savedYoutubeKey', youtubeKey);
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ 작업 준비 중...";
+            
+            addLog("작업 지시 데이터를 구성 중입니다...");
+            
+            // 데이터 폼 구성 (이미지 포함)
+            const formData = new FormData();
+            formData.append("type", videoType);
+            formData.append("strategy", strategy);
+            formData.append("youtubeKey", youtubeKey);
+            if(fileInput.files[0]) {
+                formData.append("image", fileInput.files[0]);
+                addLog("레퍼런스 이미지 탑재 완료.");
+            }
+
+            addLog("클라우드 백엔드로 작업 지시 전송 중...");
+
+            try {
+                // 백엔드로 전송 (현재는 /start만 있으므로 데이터는 무시되나 전송은 됨)
+                const response = await fetch(BACKEND_URL, { 
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if(response.ok) {
+                    addLog("✅ 서버 승인 완료!");
+                    addLog("--- 자동화 프로세스 시작 ---");
+                    addLog("[1/40] 첫 번째 영상 스크립트 작성 중...");
+                    btn.innerText = "⚙️ 작업 릴레이 진행 중";
+                } else {
+                    addLog("❌ 서버 에러 발생 (백엔드를 확인하세요)");
+                    btn.disabled = false;
+                    btn.innerText = "🚀 AI 자동화 40개 생성 시작";
+                }
+            } catch (error) {
+                addLog("❌ 서버 연결 실패. (PC의 파이썬 백엔드가 켜져있는지 확인)");
+                btn.disabled = false;
+                btn.innerText = "🚀 AI 자동화 40개 생성 시작";
+            }
+        }
+    </script>
+</body>
+</html>
