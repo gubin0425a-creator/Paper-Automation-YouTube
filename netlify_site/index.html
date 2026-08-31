@@ -687,15 +687,14 @@
             }
         }
 
-        // --- 10초 단위 자동 저장 로직 ---
-        setInterval(() => {
+        // --- 입력 시 자동 저장 (이벤트 기반) ---
+        function saveToLocalStorage() {
             const strategyVal = document.getElementById('strategy').value;
             const videoTypeVal = document.getElementById('videoType').value;
             const youtubeKeyVal = document.getElementById('youtubeKey').value;
             const githubTokenVal = document.getElementById('githubToken').value;
             const aiKeyVal = document.getElementById('aiApiKey').value;
 
-            // 로컬스토리지 저장
             if(strategyVal) localStorage.setItem('savedStrategy', strategyVal);
             if(videoTypeVal) localStorage.setItem('savedVideoType', videoTypeVal);
             if(youtubeKeyVal) localStorage.setItem('savedYoutubeKey', youtubeKeyVal);
@@ -703,7 +702,6 @@
             if(aiKeyVal) localStorage.setItem(`saved_${selectedAiModel}_key`, aiKeyVal);
             localStorage.setItem('savedAiModel', selectedAiModel);
 
-            // 시각적 피드백 (자동 저장됨 ✓)
             const indicator = document.getElementById('saveIndicator');
             if(indicator) {
                 indicator.style.opacity = '1';
@@ -711,7 +709,20 @@
                     indicator.style.opacity = '0';
                 }, 2000);
             }
-        }, 10000);
+        }
+
+        // 각 입력 칸에 입력할 때마다 자동 저장 함수 호출 (디바운싱 적용)
+        let saveTimeout;
+        const inputsToSave = ['strategy', 'videoType', 'youtubeKey', 'githubToken', 'aiApiKey'];
+        inputsToSave.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveToLocalStorage, 1500); // 1.5초 후 자동 저장
+                });
+            }
+        });
     </script>
 </body>
 </html>
