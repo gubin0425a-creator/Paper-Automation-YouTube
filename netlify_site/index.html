@@ -222,6 +222,37 @@
             color: var(--primary);
             background: #EEF2FF;
         }
+
+        .model-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .model-btn.active {
+            border-color: #3B82F6;
+            color: #3B82F6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .category-pill {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+        .category-pill.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+            border-color: rgba(16, 185, 129, 0.2);
+        }
         
         .chat-input-wrapper {
             display: flex;
@@ -237,14 +268,16 @@
             min-height: 40px;
             padding: 5px;
             font-size: 0.9rem;
+            width: 100%;
         }
         .chat-send-btn {
             background: var(--primary);
             color: white;
             border: none;
             border-radius: 12px;
-            padding: 0 15px;
+            padding: 8px 15px;
             cursor: pointer;
+            font-weight: 600;
         }
 
         /* Guide Style */
@@ -313,23 +346,48 @@
             </div>
         </div>
 
-        <!-- 탭 2: 오파독 에이전트 -->
+        <!-- 탭 2: 오파독 에이전트 (Ultra & 확장팩) -->
         <div id="tab-agent" class="tab-content">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="font-size: 1.2rem; margin-bottom: 5px;">무엇을 도와드릴까요?</h2>
-                <p style="color: var(--text-sub); font-size: 0.85rem;">AI가 마케팅 콘텐츠 제작을 도와드립니다</p>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="display: inline-block; padding: 10px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; margin-bottom: 10px;">
+                    <span style="font-size: 2rem;">✨</span>
+                </div>
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin: 0 0 5px 0;">오파독 Ultra 에이전트</h2>
+                <p style="color: var(--text-sub); font-size: 0.9rem; margin: 0;">탑티어 마케터의 프롬프트가 탑재된 AI 비서</p>
+            </div>
+
+            <!-- 모델 선택 (Ultra 기능) -->
+            <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none;">
+                <button class="model-btn active">Gemini 2.5 Flash</button>
+                <button class="model-btn">GPT-4o</button>
+                <button class="model-btn" style="border-color: #8B5CF6; color: #6D28D9; background: #EEF2FF;">Claude 3.5 Sonnet 👑</button>
+            </div>
+
+            <!-- 카테고리 필터 -->
+            <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+                <span class="category-pill active">✨ 추천</span>
+                <span class="category-pill">📱 SNS</span>
+                <span class="category-pill">🎬 영상</span>
+                <span class="category-pill">📝 생산성</span>
             </div>
 
             <div class="agent-suggestions">
-                <div class="agent-pill" onclick="setAgentPrompt('인스타그램 캐러셀 만들어줘')">인스타그램 캐러셀 만들어줘 ↗</div>
-                <div class="agent-pill" onclick="setAgentPrompt('유튜브 쇼츠 대본 써줘')">유튜브 쇼츠 대본 써줘 ↗</div>
-                <div class="agent-pill" onclick="setAgentPrompt('블로그 SEO 글 작성해줘')">블로그 SEO 글 작성해줘 ↗</div>
-                <div class="agent-pill" onclick="setAgentPrompt('브랜드 톤앤매너 만들어줘')">브랜드 톤앤매너 만들어줘 ↗</div>
+                <div class="agent-pill" onclick="selectUltraPrompt('carousel')">인스타그램 캐러셀 기획 ↗</div>
+                <div class="agent-pill" onclick="selectUltraPrompt('shorts')">유튜브 쇼츠 킬러 대본 ↗</div>
+                <div class="agent-pill" onclick="selectUltraPrompt('seo')">상위노출 블로그 SEO ↗</div>
+                <div class="agent-pill" style="border-color: var(--primary); font-weight: bold;" onclick="selectUltraPrompt('multichannel')">🔥 1->다채널 자동 변환 ↗</div>
             </div>
 
-            <div class="chat-input-wrapper">
-                <textarea id="agentInput" placeholder="메시지를 입력하세요... (프롬프트 노하우 기반)"></textarea>
-                <button class="chat-send-btn" onclick="sendAgentMessage()">전송</button>
+            <div class="chat-input-wrapper" style="flex-direction: column;">
+                <div style="display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="font-size: 0.85rem; color: var(--text-sub);">🔗 참고 채널 URL:</span>
+                    <input type="text" id="refChannel" placeholder="벤치마킹할 URL (선택)" style="flex: 1; border: none; background: transparent; font-size: 0.85rem; outline: none;">
+                </div>
+                <textarea id="agentInput" placeholder="주제나 키워드를 입력하세요... (Ultra 프롬프트 자동 적용)"></textarea>
+                <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 10px;">
+                    <span style="font-size: 0.8rem; color: var(--text-sub); margin-right: 15px;">전송 시 API 1회 차감</span>
+                    <button class="chat-send-btn" onclick="sendUltraMessage()">초안 생성</button>
+                </div>
             </div>
             
             <div id="agentResponse" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-main); white-space: pre-wrap; display: none; padding: 15px; background: #EEF2FF; border-radius: 12px; border: 1px solid #C7D2FE;"></div>
@@ -338,12 +396,12 @@
         <!-- 탭 3: 가이드 -->
         <div id="tab-guide" class="tab-content">
             <div class="guide-box">
-                <h3>📖 사용법 가이드</h3>
+                <h3>📖 사용법 및 아키텍처 가이드</h3>
                 <ol style="padding-left: 20px;">
-                    <li style="margin-bottom: 10px;"><b>API 키 세팅:</b> 타인의 비용이 발생하지 않도록 본인의 <strong>유튜브 키</strong>와 <strong>ChatGPT 키</strong>를 입력란에 먼저 등록하세요. (한 번 등록하면 기기에 영구 저장됩니다)</li>
-                    <li style="margin-bottom: 10px;"><b>전략 프롬프트:</b> 원하시는 채널의 방향성(타겟층, 분위기, 템포)을 노하우란에 구체적으로 적어주세요.</li>
-                    <li style="margin-bottom: 10px;"><b>자동화 시작:</b> [AI 자동화 시작] 버튼을 누르면 클라우드(GitHub Actions)로 명령이 전송되며 40개의 영상이 자동으로 제작 및 업로드됩니다.</li>
-                    <li><b>오파독 에이전트:</b> 에이전트 탭에서 단건 숏폼 대본이나 SEO 블로그 글을 AI에게 바로 요청할 수 있습니다.</li>
+                    <li style="margin-bottom: 10px;"><b>100% 클라우드 독립:</b> 폰(PWA)에서 버튼을 누르면 PC가 아닌 <strong>GitHub Actions</strong> 클라우드로 명령이 전송되어 서버 비용 없이 무인 가동됩니다.</li>
+                    <li style="margin-bottom: 10px;"><b>비용 방어 구조 (BYOK):</b> 타인이 앱을 써도 내 돈이 나가지 않도록 <strong>각자의 YouTube 및 AI API 키</strong>를 입력해야만 작동합니다.</li>
+                    <li style="margin-bottom: 10px;"><b>Ultra 에이전트 확장팩:</b> 단순한 대본 작성이 아닌, 업계 최고 수준의 '역할 부여 프롬프트(Persona Prompting)'가 내장되어 있어 키워드만 던져도 프로 마케터 수준의 결과물이 나옵니다.</li>
+                    <li><b>다채널 변환:</b> 하나의 소스를 인스타, 블로그, 스레드 규격에 맞게 3단 분리하여 재생산합니다.</li>
                 </ol>
             </div>
         </div>
@@ -357,7 +415,7 @@
         </button>
         <button class="tab-btn" onclick="switchTab('tab-agent', this)">
             <span class="icon">🤖</span>
-            <span>에이전트</span>
+            <span style="color: var(--primary);">Ultra 비서</span>
         </button>
         <button class="tab-btn" onclick="switchTab('tab-guide', this)">
             <span class="icon">📖</span>
@@ -405,17 +463,43 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        function setAgentPrompt(text) {
-            document.getElementById('agentInput').value = text;
+        // --- 오파독 Ultra 프롬프트 노하우 박제 ---
+        const ultraPrompts = {
+            'carousel': "당신은 10만 팔로워를 보유한 인스타그램 마케팅 전문가입니다. 다음 주제를 바탕으로 5~7장의 캐러셀 이미지에 들어갈 핵심 텍스트를 작성하세요. 1장은 강력한 후킹, 2~5장은 가치 있는 정보, 마지막 장은 저장과 공유를 유도하는 CTA로 구성해야 합니다. 불필요한 서론은 빼고 직관적으로 작성하세요.\n\n주제: ",
+            'shorts': "당신은 알고리즘을 해킹하는 탑티어 숏폼 PD입니다. 다음 주제로 40초 분량의 유튜브 쇼츠 대본을 작성하세요. 시청자의 스크롤을 멈추게 할 강력한 3초 훅(Hook)으로 시작하고, 도파민을 자극하는 빠른 템포의 문장으로 시청 지속 시간을 극대화하세요. 어조는 빠르고 자신감 있게 하세요.\n\n주제: ",
+            'seo': "당신은 구글 및 네이버 검색 노출(SEO) 전문가입니다. 다음 키워드를 바탕으로 전문적이고 가독성이 뛰어난 블로그 포스팅을 작성하세요. H2, H3 태그를 적절히 사용하고, 독자의 체류 시간을 늘릴 수 있도록 서론에 공감 요소를 넣고 본론에 구체적인 해결책을 제시하세요.\n\n키워드: ",
+            'multichannel': "당신은 다매체 콘텐츠 디렉터입니다. 다음 원본 소스를 바탕으로 3가지 플랫폼에 맞게 텍스트를 분리 및 변환하여 출력하세요.\n1) 네이버 블로그: 친절하고 상세한 정보성 글 (이모지 활용)\n2) 인스타그램 캐러셀: 짧고 임팩트 있는 카드뉴스용 문장 (5슬라이드)\n3) 스레드(Threads): 사람들의 논쟁이나 공감을 유도하는 날것의 짧은 글 1문단\n\n원본 소스: "
+        };
+
+        let currentSystemPrompt = "";
+
+        function selectUltraPrompt(type) {
+            currentSystemPrompt = ultraPrompts[type];
+            document.getElementById('agentInput').placeholder = "이곳에 주제나 원본 텍스트만 툭 던져주세요. (AI가 완벽하게 변환해 드립니다)";
+            document.getElementById('agentInput').focus();
+            
+            // 시각적 피드백
+            document.querySelectorAll('.agent-pill').forEach(el => {
+                el.style.background = '#F3F4F6';
+                el.style.color = 'var(--text-sub)';
+            });
+            event.target.style.background = 'var(--primary)';
+            event.target.style.color = 'white';
         }
 
-        function sendAgentMessage() {
-            const input = document.getElementById('agentInput').value;
+        function sendUltraMessage() {
+            const topic = document.getElementById('agentInput').value;
             const responseBox = document.getElementById('agentResponse');
-            if(!input) return;
+            
+            if(!topic) {
+                alert("주제나 키워드를 입력해주세요!");
+                return;
+            }
+            
+            let finalPayload = currentSystemPrompt ? (currentSystemPrompt + topic) : topic;
             
             responseBox.style.display = 'block';
-            responseBox.innerText = "에이전트가 응답을 생성하고 있습니다...\n(실제 연동 시 이 영역에 AI 답변이 표시됩니다.)";
+            responseBox.innerHTML = "<b>[백그라운드에서 조립된 최종 프롬프트 (박제된 노하우)]</b><br><br><span style='color: #4F46E5;'>" + finalPayload.replace(/\n/g, '<br>') + "</span><br><br><i>⚙️ 클라우드 AI 엔진으로 전송 중... (API 연결 시 실제 결과물 출력)</i>";
         }
 
         window.onload = () => {
