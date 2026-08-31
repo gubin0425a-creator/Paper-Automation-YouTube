@@ -1,0 +1,52 @@
+name: AutoTube AI Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      strategy:
+        description: '채널 전략 (프롬프트)'
+        required: false
+        default: '기본 전략'
+      video_type:
+        description: '영상 타입 (shorts / long)'
+        required: true
+        default: 'shorts'
+  schedule:
+    # 매일 아침 9시에 자동 실행 (원할 경우 주석 해제)
+    # - cron: '0 0 * * *'
+
+jobs:
+  build_and_upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Install Python Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Setup YouTube API Credentials
+      env:
+        CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS_JSON }}
+        TOKEN_PICKLE: ${{ secrets.TOKEN_PICKLE_BASE64 }}
+      run: |
+        echo "$CLIENT_SECRETS" > client_secrets.json
+        echo "$TOKEN_PICKLE" | base64 --decode > token.pickle
+
+    - name: Run Video Generation & Upload
+      run: python main.py
+      env:
+        STRATEGY: ${{ github.event.inputs.strategy }}
+        VIDEO_TYPE: ${{ github.event.inputs.video_type }}
