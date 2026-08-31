@@ -335,8 +335,17 @@
             </div>
 
             <div class="form-group">
-                <label>🤖 ChatGPT API 키 (비용 발생 방지)</label>
-                <input type="text" id="openaiKey" placeholder="본인의 OpenAI API Key (sk-...) 를 입력하세요">
+                <label>🧠 AI 모델 선택 (대본 작성용)</label>
+                <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+                    <button type="button" id="btn-gpt" class="model-btn active" onclick="selectAiModel('gpt')">GPT-4o</button>
+                    <button type="button" id="btn-claude" class="model-btn" onclick="selectAiModel('claude')">Claude 3.5 Sonnet</button>
+                    <button type="button" id="btn-gemini" class="model-btn" onclick="selectAiModel('gemini')">Gemini 2.5 Flash</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label id="aiKeyLabel">🤖 ChatGPT API 키 (비용 발생 방지)</label>
+                <input type="password" id="aiApiKey" placeholder="본인의 OpenAI API Key (sk-...) 를 입력하세요">
             </div>
 
             <div class="form-group" style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
@@ -362,11 +371,9 @@
                 <p style="color: var(--text-sub); font-size: 0.9rem; margin: 0;">탑티어 마케터의 프롬프트가 탑재된 AI 비서</p>
             </div>
 
-            <!-- 모델 선택 (Ultra 기능) -->
-            <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none;">
-                <button class="model-btn active">Gemini 2.5 Flash</button>
-                <button class="model-btn">GPT-4o</button>
-                <button class="model-btn" style="border-color: #8B5CF6; color: #6D28D9; background: #EEF2FF;">Claude 3.5 Sonnet 👑</button>
+            <!-- 모델 선택 연동 안내 -->
+            <div style="text-align: center; margin-bottom: 15px; font-size: 0.8rem; color: var(--primary); background: #EEF2FF; padding: 8px; border-radius: 8px;">
+                💡 <b>공장설정</b> 탭에서 선택한 <span id="agentCurrentModel" style="font-weight:bold;">GPT-4o</span> 모델로 작동합니다.
             </div>
 
             <!-- 카테고리 필터 -->
@@ -471,7 +478,45 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // --- 오파독 Ultra 프롬프트 노하우 박제 ---
+        // --- AI 모델 선택 로직 ---
+        let selectedAiModel = 'gpt'; // 기본값
+
+        function selectAiModel(model) {
+            selectedAiModel = model;
+            
+            // 버튼 UI 업데이트
+            document.getElementById('btn-gpt').classList.remove('active');
+            document.getElementById('btn-claude').classList.remove('active');
+            document.getElementById('btn-gemini').classList.remove('active');
+            document.getElementById(`btn-${model}`).classList.add('active');
+
+            // API 키 라블 및 플레이스홀더 업데이트
+            const keyLabel = document.getElementById('aiKeyLabel');
+            const keyInput = document.getElementById('aiApiKey');
+            const agentCurrentModel = document.getElementById('agentCurrentModel');
+
+            if (model === 'gpt') {
+                keyLabel.innerText = "🤖 ChatGPT API 키 (비용 발생 방지)";
+                keyInput.placeholder = "본인의 OpenAI API Key (sk-...) 를 입력하세요";
+                agentCurrentModel.innerText = "GPT-4o";
+            } else if (model === 'claude') {
+                keyLabel.innerText = "👑 Claude API 키 (비용 발생 방지)";
+                keyInput.placeholder = "본인의 Anthropic API Key (sk-ant-...) 를 입력하세요";
+                agentCurrentModel.innerText = "Claude 3.5 Sonnet";
+            } else if (model === 'gemini') {
+                keyLabel.innerText = "✨ Gemini API 키 (비용 발생 방지)";
+                keyInput.placeholder = "본인의 Google Gemini API Key (AIza...) 를 입력하세요";
+                agentCurrentModel.innerText = "Gemini 2.5 Flash";
+            }
+
+            // 저장된 키 불러오기
+            const savedKey = localStorage.getItem(`saved_${model}_key`);
+            if (savedKey) {
+                keyInput.value = savedKey;
+            } else {
+                keyInput.value = "";
+            }
+        }
         const ultraPrompts = {
             'carousel': "당신은 10만 팔로워를 보유한 인스타그램 마케팅 전문가입니다. 다음 주제를 바탕으로 5~7장의 캐러셀 이미지에 들어갈 핵심 텍스트를 작성하세요. 1장은 강력한 후킹, 2~5장은 가치 있는 정보, 마지막 장은 저장과 공유를 유도하는 CTA로 구성해야 합니다. 불필요한 서론은 빼고 직관적으로 작성하세요.\n\n주제: ",
             'shorts': "당신은 알고리즘을 해킹하는 탑티어 숏폼 PD입니다. 다음 주제로 40초 분량의 유튜브 쇼츠 대본을 작성하세요. 시청자의 스크롤을 멈추게 할 강력한 3초 훅(Hook)으로 시작하고, 도파민을 자극하는 빠른 템포의 문장으로 시청 지속 시간을 극대화하세요. 어조는 빠르고 자신감 있게 하세요.\n\n주제: ",
@@ -514,8 +559,14 @@
             if(localStorage.getItem('savedVideoType')) document.getElementById('videoType').value = localStorage.getItem('savedVideoType');
             if(localStorage.getItem('savedStrategy')) document.getElementById('strategy').value = localStorage.getItem('savedStrategy');
             if(localStorage.getItem('savedYoutubeKey')) document.getElementById('youtubeKey').value = localStorage.getItem('savedYoutubeKey');
-            if(localStorage.getItem('savedOpenaiKey')) document.getElementById('openaiKey').value = localStorage.getItem('savedOpenaiKey');
             if(localStorage.getItem('savedGithubToken')) document.getElementById('githubToken').value = localStorage.getItem('savedGithubToken');
+            
+            const savedModel = localStorage.getItem('savedAiModel');
+            if(savedModel) {
+                selectAiModel(savedModel);
+            } else {
+                selectAiModel('gpt');
+            }
         };
 
         function getBase64(file) {
@@ -533,19 +584,24 @@
             const strategy = document.getElementById('strategy').value;
             const fileInput = document.getElementById('referenceImage');
             const youtubeKey = document.getElementById('youtubeKey').value;
-            const openaiKey = document.getElementById('openaiKey').value;
+            const aiKey = document.getElementById('aiApiKey').value;
             const githubToken = document.getElementById('githubToken').value;
             
             if (!githubToken) {
                 alert("GitHub 시스템 토큰을 입력해야 클라우드 엔진을 가동할 수 있습니다!");
                 return;
             }
+            if (!aiKey) {
+                alert("선택하신 AI 모델의 API 키를 입력해주세요!");
+                return;
+            }
 
             localStorage.setItem('savedVideoType', videoType);
             localStorage.setItem('savedStrategy', strategy);
             localStorage.setItem('savedYoutubeKey', youtubeKey);
-            localStorage.setItem('savedOpenaiKey', openaiKey);
             localStorage.setItem('savedGithubToken', githubToken);
+            localStorage.setItem('savedAiModel', selectedAiModel);
+            localStorage.setItem(`saved_${selectedAiModel}_key`, aiKey);
             
             btn.disabled = true;
             btn.innerText = "☁️ 클라우드 엔진 예열 중...";
@@ -583,7 +639,7 @@
                     addLog("이미지 업로드 완료!");
                 }
 
-                addLog("GitHub Actions 무인 공장 가동 명령 전송...");
+                addLog(`GitHub Actions 무인 공장 가동 명령 전송... (${selectedAiModel.toUpperCase()} 탑재)`);
 
                 // 2. GitHub Actions Workflow Trigger
                 const dispatchUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`;
@@ -601,7 +657,8 @@
                             videoType: videoType,
                             strategy: strategy,
                             youtubeKey: youtubeKey,
-                            openaiKey: openaiKey
+                            aiModel: selectedAiModel,
+                            aiKey: aiKey
                         }
                     })
                 });
