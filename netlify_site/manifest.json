@@ -1,0 +1,21 @@
+{
+  "name": "AutoTube AI",
+  "short_name": "AutoTube",
+  "description": "유튜브 자동화 무인 생산기",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#764ba2",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
