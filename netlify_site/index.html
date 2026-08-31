@@ -311,21 +311,27 @@
             <div class="form-group">
                 <label>🎬 영상 생성 옵션</label>
                 <select id="videoType">
-                    <option value="shorts">세로형 쇼츠 (9:16)</option>
-                    <option value="long">가로형 일반 영상 (16:9)</option>
+                    <option value="shorts">📱 세로형 쇼츠 (YouTube 9:16)</option>
+                    <option value="reels">📱 인스타 릴스 (Instagram 9:16)</option>
+                    <option value="tiktok">📱 틱톡 (TikTok 9:16)</option>
+                    <option value="long">🖥️ 가로형 롱폼 (YouTube 16:9)</option>
+                    <option value="square">🔲 정방형 피드 (Instagram 1:1)</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>🖼️ 레퍼런스 이미지 첨부 (원페이지)</label>
-                <div class="file-upload-wrapper">
-                    <span class="file-upload-btn" id="fileLabel">📸 이미지 선택하기...</span>
-                    <input type="file" id="referenceImage" accept="image/*" onchange="updateFileLabel()">
+                <input type="file" id="referenceImage" accept="image/*" onchange="updateFileLabel()" style="display: none;">
+                <div id="fileLabel" class="file-upload-label" onclick="document.getElementById('referenceImage').click()">
+                    📸 클릭하여 이미지 업로드
                 </div>
             </div>
 
             <div class="form-group">
-                <label>📝 채널 전략 및 프롬프트 (프롬프트 노하우)</label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label>📝 채널 전략 및 프롬프트 (프롬프트 노하우)</label>
+                    <span id="saveIndicator" style="font-size: 0.75rem; color: #10B981; opacity: 0; transition: opacity 0.5s;">자동 저장됨 ✓</span>
+                </div>
                 <textarea id="strategy" placeholder="예: 20대 타겟, 빠른 템포, 웅장한 BGM 사용. 대본은 동기부여 위주로 작성할 것."></textarea>
             </div>
 
@@ -680,6 +686,32 @@
                 btn.innerText = "🚀 AI 자동화 40개 생성 시작";
             }
         }
+
+        // --- 10초 단위 자동 저장 로직 ---
+        setInterval(() => {
+            const strategyVal = document.getElementById('strategy').value;
+            const videoTypeVal = document.getElementById('videoType').value;
+            const youtubeKeyVal = document.getElementById('youtubeKey').value;
+            const githubTokenVal = document.getElementById('githubToken').value;
+            const aiKeyVal = document.getElementById('aiApiKey').value;
+
+            // 로컬스토리지 저장
+            if(strategyVal) localStorage.setItem('savedStrategy', strategyVal);
+            if(videoTypeVal) localStorage.setItem('savedVideoType', videoTypeVal);
+            if(youtubeKeyVal) localStorage.setItem('savedYoutubeKey', youtubeKeyVal);
+            if(githubTokenVal) localStorage.setItem('savedGithubToken', githubTokenVal);
+            if(aiKeyVal) localStorage.setItem(`saved_${selectedAiModel}_key`, aiKeyVal);
+            localStorage.setItem('savedAiModel', selectedAiModel);
+
+            // 시각적 피드백 (자동 저장됨 ✓)
+            const indicator = document.getElementById('saveIndicator');
+            if(indicator) {
+                indicator.style.opacity = '1';
+                setTimeout(() => {
+                    indicator.style.opacity = '0';
+                }, 2000);
+            }
+        }, 10000);
     </script>
 </body>
 </html>
