@@ -4,19 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       videoType:
-        description: '영상 타입 (shorts / long)'
+        description: '영상 타입'
         required: true
         default: 'shorts'
       strategy:
-        description: '채널 전략 (프롬프트)'
+        description: '채널 전략'
         required: false
         default: ''
       youtubeKey:
         description: 'YouTube API Key'
         required: false
         default: ''
-      openaiKey:
-        description: 'OpenAI API Key'
+      aiModel:
+        description: 'AI Model'
+        required: true
+        default: 'gpt'
+      aiKey:
+        description: 'AI API Key'
         required: false
         default: ''
 
@@ -48,4 +52,5 @@ jobs:
         VIDEO_TYPE: ${{ github.event.inputs.videoType }}
         STRATEGY: ${{ github.event.inputs.strategy }}
         YOUTUBE_KEY: ${{ github.event.inputs.youtubeKey }}
-        OPENAI_KEY: ${{ github.event.inputs.openaiKey }}
+        AI_MODEL: ${{ github.event.inputs.aiModel }}
+        AI_KEY: ${{ github.event.inputs.aiKey }}
